@@ -1,0 +1,14 @@
+{
+	"authors": [
+		"ayplo"
+	],
+	"copyright": "Copyright © 2019, ayplo",
+	"dependencies": {
+		"asdf": "~>0.5.2",
+		"darg": "~>0.1.0",
+		"mustache-d": "~>0.1.3"
+	},
+	"description": "Single file emulation of the lua filesystem.",
+	"license": "proprietary",
+	"name": "lua-vfs"
+}

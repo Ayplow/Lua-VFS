@@ -1,0 +1,8 @@
+{
+	"fileVersion": 1,
+	"versions": {
+		"asdf": "0.5.2",
+		"darg": "0.1.0",
+		"mustache-d": "0.1.3"
+	}
+}
