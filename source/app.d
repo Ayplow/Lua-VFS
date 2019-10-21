@@ -11,6 +11,7 @@ import std.typecons;
 import asdf.serialization;
 import darg;
 import std.conv;
+import std.regex : replaceFirst, regex;
 import mustache;
 
 private struct Options {
@@ -52,6 +53,11 @@ auto toLua(bool b) {
 auto toLua(T)(T[] a) {
     return "{n=" ~ a.length.to!string ~ ',' ~ a.map!toLua.join(`,`) ~ '}';
 }
+auto platform(string s) {
+    version(Windows)
+      return replaceFirst(replace("C:\\oho\\nein\\wat", "\\", "/"), regex(r"([A-Z]):/"), "/$1/");
+    return s;
+}
 int main(string[] args) {
     alias MustacheEngine!string Mustache;
     Mustache mus;
@@ -88,8 +94,8 @@ int main(string[] args) {
     }
     immutable results = output.deserialize!Results;
 
-    auto files = results.ioopen.map!(path => tuple(path.absolutePath, path.readText));
-    auto scripts = results.loadfile.map!(path => tuple(path.absolutePath, path.readText));
+    auto files = results.ioopen.map!(path => tuple(path.absolutePath.platform, path.readText));
+    auto scripts = results.loadfile.map!(path => tuple(path.absolutePath.platform, path.readText));
     // writeln(toLua(scripts));
     // Literal(`function(_ENV,loadfile,io) return function(...)` ~ path.readText ~ `end end`)
     auto context = new mus.Context;
@@ -98,7 +104,7 @@ int main(string[] args) {
     context["files"] = toLua(chain(files, scripts).map!(tup => tuple(tup[0], [tup[1]])).assocArray);
     context["entrypoint"] = toLua(options.entrypoint);
     version(Windows) context["normalizeplatform"] = `
-      P = gsub(P, "\\", "/")
+      P = gsub(gsub(P, "\\", "/"), "^(%a):/", "/%1/")
     `;
     if (options.preload) context["scripts"] = scripts
       .map!(tup =>
@@ -106,8 +112,7 @@ int main(string[] args) {
           Literal(`function(_ENV,loadfile,io) return function(...)`
                 ~ tup[1]
                 ~ `end end`))).assocArray.toLua;
-    // writeln(chain(files, scripts).assocArray);
     File(options.entrypoint.withExtension(".bundle.lua"), "w").write(mus.renderString(import("scoped_template.lua"), context));
-
+    
     return 0;
 }
