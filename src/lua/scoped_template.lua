@@ -91,7 +91,7 @@ io = setmetatable({
         return nil, filename .. ": No such file or directory", 2
     end
 }, {__index = __LUA_VFS.DEFAULT.io})
-local bound_tmpl = "loadfile, io = ... return function(...)\n%s\nend"
+local bound_tmpl = "loadfile,io=... return function(...)\n%s\nend"
 local format = string.format
 loadfile = load and function(...)
     local filename, mode, env = ...
