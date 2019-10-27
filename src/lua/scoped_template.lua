@@ -95,7 +95,7 @@ end or SCRIPTS and function(...)
     -- If we don't have load, fall back to using preloaded functions
     local script = SCRIPTS[normalize(filename)]
     if script then
-        return script(env or _ENV)
+        return script(env or _ENV, loadfile, io)
     else
         return _loadfile(...)
     end
