@@ -36,41 +36,42 @@ _ENV: {
 ]]
 -- Function signature of Lua5.2 loadfile. Ignores `mode` argument
 local poly_loadfile
-local l_loadfile, l_load, l_print, l_error, l_type, l_io
-    =   loadfile,   load,   print,   error,   type,   io
-local l_open = l_io.open
+local lloadfile, lio, lload
+    =  loadfile,  io,  load
+local print, type, os, open
+    = print, type, os, lio.open
 
 do
-    local _loadfile = l_loadfile
+    local _loadfile = lloadfile
     local format = "*a"
     if not _loadfile then
-        local l_stdin = l_io.stdin
-        local l_read = l_stdin.read
-        local l_close = l_stdin.close
-        if not (l_open and l_read and l_close and l_load) then
-            l_error("Could not polyfill loadfile.")
+        local stdin = lio.stdin
+        local read = stdin.read
+        local close = stdin.close
+        if not (open and read and close and load) then
+            return error("Could not polyfill loadfile.")
         end
         function _loadfile(filename, ...)
             local file, err
             if filename then
-                file, err = l_open(filename)
+                file, err = open(filename)
             else
                 filename = "stdin"
-                file = l_stdin
+                file = stdin
             end
             if file then
-                local contents = l_read(file, format)
-                l_close(file)
-                return l_load(contents, "=" .. filename, ...)
+                local contents = read(file, format)
+                close(file)
+                return lload(contents, "=" .. filename, ...)
             else
                 return nil, "cannot open " .. err
             end
         end
     end
     if _VERSION == "5.1" then
-        local l_setfenv = setfenv
+        local setfenv = setfenv
         function poly_loadfile(filename, _, env)
-            return l_setfenv(_loadfile(filename), env)
+            return setfenv(_loadfile(filename), env)
         end
     else
         if _VERSION == "5.3" then
@@ -80,24 +81,22 @@ do
     end
 end
 
-local ioop_log = {}
-if l_type(l_open) == "function" then
-    ioop_log.n = 0
+local ioop_log = {n=0}
+if open then
     function io.open(filename, ...)
         local n     = ioop_log.n + 1
         ioop_log[n] = filename
         ioop_log.n  = n 
-        return l_open(filename, ...)
+        return open(filename, ...)
     end
 end
-local lf_log = {}
-if l_type(l_loadfile) == "function" then
-    lf_log.n = 0
+local lf_log = {n=0}
+if lloadfile then
     function loadfile(filename, ...)
         local n   = lf_log.n + 1
         lf_log[n] = filename
         lf_log.n  = n
-        return l_loadfile(filename, ...)
+        return lloadfile(filename, ...)
     end
 end
 local l_arg = arg
