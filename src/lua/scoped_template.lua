@@ -8,8 +8,15 @@ local __LUA_VFS = {
 local loadfile, io, require
 __LUA_VFS.FILES = {{{files}}} -- type: Table[string, {string, function}] - Collection of file references keyed by absolute path
 local FILES, CWD = __LUA_VFS.FILES, __LUA_VFS.CWD
-local _loadfile = __LUA_VFS.DEFAULT.loadfile or function(filename)
-    return nil, "cannot open " .. filename .. ": No such file or directory"
+local stdin = __LUA_VFS.DEFAULT.io.stdin
+local _loadfile = __LUA_VFS.DEFAULT.loadfile or function(filename, mode, env)
+    if filename then
+        return nil, "cannot open " .. filename .. ": No such file or directory"
+    end
+    -- If load/stdin are missing from the environment, this
+    -- throws attempt to index/call errors, which seem
+    -- descriptive enough
+    return load(stdin:read("a"), "=stdin", ...)
 end
 
 local function normalize(P)
@@ -71,13 +78,7 @@ local bound_tmpl = "loadfile,io=... return function(...)\n%s\nend"
 local format = string.format
 loadfile = load and function(...)
     local filename, mode, env = ...
-    local file, err
-    if filename then
-        file, err = io.open(filename)
-    else
-        filename = "stdin"
-        file = io.stdin
-    end
+    local file = io.open(filename)
     if file then
         -- TODO: Check if this binding template is really doing anything useful.
         return load(format(bound_tmpl, file:read("a")), "=" .. filename, mode,
