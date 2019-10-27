@@ -2,7 +2,6 @@ local __LUA_VFS = {
     -- TODO: If there is a way to get the runtime CWD, that would be ideal.
     CWD = {{{cwd}}}, -- type: string - Absolute CWD
     ENTRYPOINT = {{{entrypoint}}}, -- type: string - Entry lua file path
-    IS_WINDOWS = {{{is_windows}}}, -- type: boolean - Whether the compilation platform was windows
     DEFAULT = {loadfile = loadfile, io = io, require = require},
     FILES = {{{files}}}
 }
@@ -100,4 +99,4 @@ end or function(...)
     end
 end
 
-return loadfile(__LUA_VFS.ENTRYPOINT)(...)
+return loadfile({{{entrypoint}}})(...)
