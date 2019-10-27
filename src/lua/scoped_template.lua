@@ -1,35 +1,33 @@
-local __LUA_VFS = {
-    -- TODO: If there is a way to get the runtime CWD, that would be ideal.
-    CWD = {{{cwd}}}, -- type: string - Absolute CWD
-    ENTRYPOINT = {{{entrypoint}}}, -- type: string - Entry lua file path
-    DEFAULT = {loadfile = loadfile, io = io, require = require},
-    FILES = {{{files}}}
-}
-local loadfile, io, require
-__LUA_VFS.SCRIPTS = {{{scripts}}} -- type: Table[string, {string, function}] - Collection of file references keyed by absolute path
-local FILES, SCRIPTS, CWD = __LUA_VFS.FILES, __LUA_VFS.SCRIPTS, __LUA_VFS.CWD
-local stdin = __LUA_VFS.DEFAULT.io.stdin
-local _loadfile = __LUA_VFS.DEFAULT.loadfile or function(filename, mode, env)
+local scripts,       files,       cwd 
+ = {{{scripts}}}, {{{files}}}, {{{cwd}}}
+
+local io, load, ENV,               _
+    = io, load, _ENV or getfenv(), string
+local sub,  gsub,  format,  find
+   =_.sub,_.gsub,_.format,_.find
+local stdin = io and io.stdin
+local whole = VERSION == "5.3" and "a" or "*a"
+local loadfile = loadfile or function(filename, mode, env)
     if filename then
         return nil, "cannot open " .. filename .. ": No such file or directory"
     end
     -- If load/stdin are missing from the environment, this
     -- throws attempt to index/call errors, which seem
     -- descriptive enough
-    return load(stdin:read("a"), "=stdin", ...)
+    return load(stdin:read(whole), "=stdin", mode, env or ENV)
 end
 
 local function normalize(P)
     {{{normalizeplatform}}}
-    if P:sub(1, 1) ~= "/" then
+    if sub(P, 1, 1) ~= "/" then
         P = cwd .. "/" .. P
     end
     local k
     repeat -- /./ -> /
-        P, k = P:gsub("/+%.?/", "/")
+        P, k = gsub(P, "/+%.?/", "/")
     until k == 0
     repeat -- /A/../ -> /
-        P, k = P:gsub("[^/]+/%.%./?", "")
+        P, k = gsub(P, "[^/]+/%.%./?", "")
     until k == 0
     if P == "" then P = "." end
     return P
@@ -39,15 +37,15 @@ local function TODO() error "not implemented" end
 local filemeta = {
     read = function(handle, format)
         local contents = handle[2][1]
-        if format == "a" then
+        if format == "a" or format == "*a" then
             local current = handle[1]
             handle[1] = #contents
-            return contents:sub(current, handle[1])
+            return sub(contents, current, handle[1])
         elseif format == "l" then
             local current = handle[1]
-            local to = contents:find("\n", current)
+            local to = find(contents, "\n", current)
             handle[1] = to + 1
-            return contents:sub(current, to - 1)
+            return sub(contents, current, to - 1)
         end
         return TODO()
     end,
@@ -64,41 +62,40 @@ local filemeta = {
     __name = "FILE*"
 }
 filemeta.__index = filemeta
-local function file(ref, mode) return setmetatable({0, ref}, filemeta) end
 local function open(filename, mode)
-    local ref = FILES[normalize(filename)]
-    if ref then return file(ref, mode) end
+    local ref = files[normalize(filename)]
+    if ref then return setmetatable({0, ref}, filemeta) end
     -- TODO: Implement proper error handling
     return nil, filename .. ": No such file or directory", 2
 end
-io = {}
-for key, value in pairs(__LUA_VFS.DEFAULT.io) do
-    io[key] = value
+local vio = {}
+for key, value in pairs(io) do
+    vio[key] = value
 end
-io.open = open
+vio.open = open
 local bound_tmpl = "loadfile,io=... return function(...)\n%s\nend"
-local format = string.format
-loadfile = load and function(...)
+local vloadfile
+vloadfile = load and function(...)
     local filename, mode, env = ...
     -- TODO: Handle errors
     local file = open(filename)
     if file then
         -- TODO: Check if this binding template is really doing anything useful.
         return load(format(bound_tmpl, file:read("a")), "=" .. filename, mode,
-                    env or _ENV)(loadfile, io)
+                    env or ENV)(vloadfile, vio)
     else
-        return _loadfile()
+        return loadfile(...)
     end
     -- Should we force the compiler to make this decision?
-end or SCRIPTS and function(...)
+end or scripts and function(...)
     local filename, mode, env = ...
     -- If we don't have load, fall back to using preloaded functions
-    local script = SCRIPTS[normalize(filename)]
+    local script = scripts[normalize(filename)]
     if script then
-        return script(env or _ENV, loadfile, io)
+        return script(env or ENV, vloadfile, vio)
     else
-        return _loadfile(...)
+        return loadfile(...)
     end
-end or _loadfile
+end or loadfile
 
-return loadfile({{{entrypoint}}})(...)
+return vloadfile({{{entrypoint}}})(...)
