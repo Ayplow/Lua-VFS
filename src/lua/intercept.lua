@@ -99,42 +99,32 @@ if lloadfile then
         return lloadfile(filename, ...)
     end
 end
-local l_arg = arg
-local init_path = l_arg[0]
-local emuenv_path = ...
-local offset = 1
-local function doinitfile(...)
-    local c_arg = {[-1] = l_arg[-1]}
-    local i, v = 0, init_path
-    repeat
-        c_arg[i] = v
-        i = i + 1
-        v = l_arg[i + offset]
-    until not v
-    arg = c_arg
-    -- TODO: Gracefully handle invalid entrypoint
-    return poly_loadfile(init_path, nil, ...)()
-end
-local function dofiles()
-    if emuenv_path then
-        offset = 2
-        if emuenv_path ~= "-" then
-            arg = {[-1] = l_arg[-1], [0] = emuenv_path}
-            -- TODO: Gracefully handle invalid emuenv
-            return poly_loadfile(emuenv_path)()(doinitfile)
-        end
-    end
-    return doinitfile()
-end
-dofiles()
 
-local list_tab
-function list_tab(tab)
-    if tab.n then
-        for n=1, tab.n do
-            l_print("/ /?/")
-            l_print(tab[n])
+local function stringtojson(s)
+    return "\""
+        .. s
+          :gsub("\\", "\\\\")
+          :gsub("\"", "\\\"")
+          :gsub("\n", "\\n")
+          :gsub("\r", "\\r")
+        .. "\""
+end
+local function stringlisttojson(list)
+    local body = list[1] and stringtojson(list[1]) or ""
+    for n=2, list.n do
+        body = body .. "," .. stringtojson(list[n])
         end
+    return "[" .. body .. "]"
+    end
+local exit = os.exit
+function os.exit(...)
+    print("{"
+        .. "\"loadfile\":"
+        .. stringlisttojson(lf_log)
+        .. ",\"ioopen\":"
+        .. stringlisttojson(ioop_log)
+        .. "}")
+    return exit(...)
     end
 local success, err = pcall(function()
     loadfile(arg[0])()
@@ -142,12 +132,4 @@ end)
 if not success then
     print("An error occurred during execution: ", err)
 end
-l_print("[[VFS::INTERCEPTED]]")
-l_print(l_type(l_load) == "function")
-l_print("/ /:/load log")
-list_tab(lf_log)
-l_print("/ /:/io log")
-list_tab(ioop_log)
-l_print("[[VFS::RESULTS_DONE]]")
-
-while true do end
+return os.exit()
