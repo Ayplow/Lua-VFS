@@ -121,7 +121,7 @@ end or function(...)
 end
 
 -- Patches for enviroments that lack the standard library
-arg = arg or {[-1] = "lua53.exe", [0] = "init.lua"}
+arg = arg or { [-1] = "lua", [0] = "init.lua" }
 os = os or {}
 os.getenv = os.getenv or function() end
 return loadfile(__LUA_VFS.ENTRYPOINT)(...)
