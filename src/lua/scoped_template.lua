@@ -120,8 +120,4 @@ end or function(...)
     end
 end
 
--- Patches for enviroments that lack the standard library
-arg = arg or { [-1] = "lua", [0] = "init.lua" }
-os = os or {}
-os.getenv = os.getenv or function() end
 return loadfile(__LUA_VFS.ENTRYPOINT)(...)
