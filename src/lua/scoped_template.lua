@@ -53,7 +53,7 @@ local function abspath(path)
 end
 local function resolve_file(path) return FILES[normpath(abspath(path))] end
 -- TODO: Remove this function
-local function TODO() error "Not Implemented" end
+local function TODO() error "not implemented" end
 local filemeta = {
     read = function(handle, format)
         local contents = handle[2][1]
