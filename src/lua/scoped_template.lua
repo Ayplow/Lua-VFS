@@ -3,11 +3,12 @@ local __LUA_VFS = {
     CWD = {{{cwd}}}, -- type: string - Absolute CWD
     ENTRYPOINT = {{{entrypoint}}}, -- type: string - Entry lua file path
     IS_WINDOWS = {{{is_windows}}}, -- type: boolean - Whether the compilation platform was windows
-    DEFAULT = {loadfile = loadfile, io = io, require = require}
+    DEFAULT = {loadfile = loadfile, io = io, require = require},
+    FILES = {{{files}}}
 }
 local loadfile, io, require
-__LUA_VFS.FILES = {{{files}}} -- type: Table[string, {string, function}] - Collection of file references keyed by absolute path
-local FILES, CWD = __LUA_VFS.FILES, __LUA_VFS.CWD
+__LUA_VFS.SCRIPTS = {{{scripts}}} -- type: Table[string, {string, function}] - Collection of file references keyed by absolute path
+local FILES, SCRIPTS, CWD = __LUA_VFS.FILES, __LUA_VFS.SCRIPTS, __LUA_VFS.CWD
 local stdin = __LUA_VFS.DEFAULT.io.stdin
 local _loadfile = __LUA_VFS.DEFAULT.loadfile or function(filename, mode, env)
     if filename then
@@ -34,7 +35,6 @@ local function normalize(P)
     if P == "" then P = "." end
     return P
 end
-local function resolve_file(path) return FILES[normalize(path)] end
 -- TODO: Remove this function
 local function TODO() error "not implemented" end
 local filemeta = {
@@ -67,7 +67,7 @@ local filemeta = {
 filemeta.__index = filemeta
 local function file(ref, mode) return setmetatable({0, ref}, filemeta) end
 local function open(filename, mode)
-    local ref = resolve_file(filename)
+    local ref = FILES[normalize(filename)]
     if ref then return file(ref, mode) end
     -- TODO: Implement proper error handling
     return nil, filename .. ": No such file or directory", 2
@@ -92,9 +92,9 @@ loadfile = load and function(...)
 end or function(...)
     local filename, mode, env = ...
     -- If we don't have load, fall back to using preloaded functions
-    local file = resolve_file(filename)
-    if file then
-        return file[2](env or _ENV)
+    local script = SCRIPTS[normalize(filename)]
+    if script then
+        return script(env or _ENV)
     else
         return _loadfile(...)
     end
