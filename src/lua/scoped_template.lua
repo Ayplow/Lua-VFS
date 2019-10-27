@@ -80,6 +80,7 @@ local bound_tmpl = "loadfile,io=... return function(...)\n%s\nend"
 local format = string.format
 loadfile = load and function(...)
     local filename, mode, env = ...
+    -- TODO: Handle errors
     local file = open(filename)
     if file then
         -- TODO: Check if this binding template is really doing anything useful.
@@ -88,7 +89,8 @@ loadfile = load and function(...)
     else
         return _loadfile()
     end
-end or function(...)
+    -- Should we force the compiler to make this decision?
+end or SCRIPTS and function(...)
     local filename, mode, env = ...
     -- If we don't have load, fall back to using preloaded functions
     local script = SCRIPTS[normalize(filename)]
@@ -97,6 +99,6 @@ end or function(...)
     else
         return _loadfile(...)
     end
-end
+end or _loadfile
 
 return loadfile({{{entrypoint}}})(...)
