@@ -17,8 +17,17 @@ _ENV: {
     error: function,
     print: function,
     type: function,
-    loadfile: function, -- Alternatively, a shim can be created with io: { open, stdin: FILE { close, read } } and load
-    _G: <_ENV>
+    -- EITHER
+    loadfile: function,
+    -- OR
+    io: {
+      open: function,
+      stdin: {
+        close: function,
+        read: function
+}
+    },
+    load: function
 }
 - _ENV is getfenv() in Lua5.1
 - The functions are all treated as their PUC-Rio counterparts, but no checks are made.
