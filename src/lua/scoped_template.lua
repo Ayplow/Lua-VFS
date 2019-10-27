@@ -11,47 +11,23 @@ local FILES, CWD = __LUA_VFS.FILES, __LUA_VFS.CWD
 local _loadfile = __LUA_VFS.DEFAULT.loadfile or function(filename)
     return nil, "cannot open " .. filename .. ": No such file or directory"
 end
-local function assert_arg(n, val, tp, verify, msg, lev)
-    if type(val) ~= tp then
-        error(("argument %d expected a '%s', got a '%s'"):format(n, tp,
-                                                                 type(val)),
-              lev or 2)
-    end
-    if verify and not verify(val) then
-        error(("argument %d: '%s' %s"):format(n, val, msg), lev or 2)
-    end
-end
-local function assert_string(n, val) assert_arg(n, val, 'string', nil, nil, 3) end
-local is_windows = __LUA_VFS.IS_WINDOWS
-local sep = is_windows and '\\' or '/'
-local np_pat1, np_pat2 = ('[^SEP]+SEP%.%.SEP?'):gsub("SEP", sep),
-                         ('SEP+%.?SEP'):gsub("SEP", sep)
-local function normpath(P)
-    assert_string(1, P)
-    if is_windows then
-        if P:match '^\\\\' then -- UNC
-            return '\\\\' .. normpath(P:sub(3))
-        end
-        P = P:gsub('/', '\\')
+
+local function normalize(P)
+    {{{normalizeplatform}}}
+    if P:sub(1, 1) ~= "/" then
+        P = cwd .. "/" .. P
     end
     local k
     repeat -- /./ -> /
-        P, k = P:gsub(np_pat2, sep)
+        P, k = P:gsub("/+%.?/", "/")
     until k == 0
     repeat -- /A/../ -> /
-        P, k = P:gsub(np_pat1, '')
+        P, k = P:gsub("[^/]+/%.%./?", "")
     until k == 0
-    if P == '' then P = '.' end
+    if P == "" then P = "." end
     return P
 end
-
-local function is_relative(path)
-    return path:sub(1, 1) == '/' or is_windows and path:sub(2, 2) == ':'
-end
-local function abspath(path)
-    return is_relative(path) and path or CWD .. sep .. path
-end
-local function resolve_file(path) return FILES[normpath(abspath(path))] end
+local function resolve_file(path) return FILES[normalize(path)] end
 -- TODO: Remove this function
 local function TODO() error "not implemented" end
 local filemeta = {
