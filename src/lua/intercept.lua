@@ -137,6 +137,11 @@ function list_tab(tab)
             l_print(tab[n])
         end
     end
+local success, err = pcall(function()
+    loadfile(arg[0])()
+end)
+if not success then
+    print("An error occurred during execution: ", err)
 end
 l_print("[[VFS::INTERCEPTED]]")
 l_print(l_type(l_load) == "function")
