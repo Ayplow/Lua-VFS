@@ -22,7 +22,7 @@ _ENV: {
 }
 - _ENV is getfenv() in Lua5.1
 - The functions are all treated as their PUC-Rio counterparts, but no checks are made.
-- Finally, to intercapt them, the script must be able to replace the `io.open` and `loadfile`
+- Finally, to intercept them, the script must be able to replace the `io.open` and `loadfile`
   functions. This will be done with an assignment, meaning use of __newindex is permitted.
 ]]
 -- Function signature of Lua5.2 loadfile. Ignores `mode` argument
