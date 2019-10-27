@@ -60,7 +60,7 @@ local filemeta = {
         -- TODO: Fully implement
     end,
     __tostring = TODO,
-    __gc = TODO,
+    __gc = function() end,
     __name = "FILE*"
 }
 filemeta.__index = filemeta
