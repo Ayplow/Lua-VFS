@@ -66,19 +66,22 @@ local filemeta = {
 }
 filemeta.__index = filemeta
 local function file(ref, mode) return setmetatable({0, ref}, filemeta) end
-io = setmetatable({
-    open = function(filename, mode)
-        local ref = resolve_file(filename)
-        if ref then return file(ref, mode) end
-        -- TODO: Implement proper error handling
-        return nil, filename .. ": No such file or directory", 2
-    end
-}, {__index = __LUA_VFS.DEFAULT.io})
+local function open(filename, mode)
+    local ref = resolve_file(filename)
+    if ref then return file(ref, mode) end
+    -- TODO: Implement proper error handling
+    return nil, filename .. ": No such file or directory", 2
+end
+io = {}
+for key, value in pairs(__LUA_VFS.DEFAULT.io) do
+    io[key] = value
+end
+io.open = open
 local bound_tmpl = "loadfile,io=... return function(...)\n%s\nend"
 local format = string.format
 loadfile = load and function(...)
     local filename, mode, env = ...
-    local file = io.open(filename)
+    local file = open(filename)
     if file then
         -- TODO: Check if this binding template is really doing anything useful.
         return load(format(bound_tmpl, file:read("a")), "=" .. filename, mode,
