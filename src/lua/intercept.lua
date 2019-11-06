@@ -47,7 +47,6 @@ do
     if not _loadfile then
         local stdin = lio.stdin
         local read = stdin.read
-        local close = stdin.close
         if not (open and read and close and load) then
             return error("Could not polyfill loadfile.")
         end
@@ -61,7 +60,7 @@ do
             end
             if file then
                 local contents = read(file, format)
-                close(file)
+                file:close()
                 return lload(contents, "=" .. filename, ...)
             else
                 return nil, "cannot open " .. err
