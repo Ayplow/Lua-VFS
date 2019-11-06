@@ -129,11 +129,6 @@ function os.exit(...)
         .. stringlisttojson(ioop_log)
         .. "}")
     return exit(...)
-    end
-local success, err = pcall(function()
-    loadfile(arg[0])()
-end)
-if not success then
-    print("An error occurred during execution: ", err)
 end
+loadfile(arg[0])()
 return os.exit()
