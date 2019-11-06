@@ -36,16 +36,16 @@ _ENV: {
 ]]
 -- Function signature of Lua5.2 loadfile. Ignores `mode` argument
 local poly_loadfile
-local lloadfile, lio, lload
-    =  loadfile,  io,  load
-local print, type, os, open
-    = print, type, os, lio.open
+local lloadfile, io
+    =  loadfile, io
+local print, type, os, load, open
+    = print, type, os, load, io.open
 
 do
     local _loadfile = lloadfile
     local format = "*a"
     if not _loadfile then
-        local stdin = lio.stdin
+        local stdin = io.stdin
         local read = stdin.read
         if not (open and read and close and load) then
             return error("Could not polyfill loadfile.")
@@ -61,7 +61,7 @@ do
             if file then
                 local contents = read(file, format)
                 file:close()
-                return lload(contents, "=" .. filename, ...)
+                return load(contents, "=" .. filename, ...)
             else
                 return nil, "cannot open " .. err
             end
