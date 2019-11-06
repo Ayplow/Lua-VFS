@@ -1,17 +1,8 @@
---[[ TODO
-- Gracefully handle os.exit
-- Fully intercept the io library. E.g io.lines("file")
-]]
--- iter = io.open("test.lua")
--- print(load(iter:lines())())
--- loadfile = nil
--- io.open = nil
--- load= nil
--- os.exit()
--- print(loadfile "notafile.lku")
--- loadfile = nil
+--[[
+TODO: Fully intercept the io library. E.g io.lines("file")
+TODO: Minify this file before bundling with the binary
 
---[[ Minimum enironvment required for this file:
+Minimum enironvment required for this file:
 _ENV: {
     rawget: function,
     error: function,
