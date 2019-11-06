@@ -27,10 +27,24 @@ _ENV: {
 ]]
 -- Function signature of Lua5.2 loadfile. Ignores `mode` argument
 local poly_loadfile
-local lloadfile, io
-    =  loadfile, io
-local print, type, os, load, open
-    = print, type, os, load, io.open
+local lloadfile, lprint, io
+    =  loadfile,  print, io
+local type, os, load,    open,    stderr
+    = type, os, load, io.open, io.stderr
+-- redirect output to stderr to simplify the scripts' interface
+io.stdout = stderr
+local _print
+local sep = " "
+local rep = string.rep
+function _print(out, ...)
+    if out == nil then
+        return write(stderr, "\n")
+    end
+    stderr:write(out)
+    stderr:write(rep(sep, 8 - #out % 8))
+    return _print(...)
+end
+print = _print
 
 do
     local _loadfile = lloadfile
@@ -108,7 +122,7 @@ local function stringlisttojson(list)
     end
 local exit = os.exit
 function os.exit(...)
-    print("{"
+    lprint("{"
         .. "\"loadfile\":"
         .. stringlisttojson(lf_log)
         .. ",\"ioopen\":"
