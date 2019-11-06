@@ -69,8 +69,10 @@ local function open(filename, mode)
     return nil, filename .. ": No such file or directory", 2
 end
 local vio = {{}}
-for key, value in pairs(io) do
-    vio[key] = value
+if io then
+    for key, value in pairs(io) do
+        vio[key] = value
+    end
 end
 vio.open = open
 local bound_tmpl = "local loadfile,io=... return function(...)\n%s\nend"
