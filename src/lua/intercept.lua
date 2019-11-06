@@ -38,7 +38,7 @@ local sep = " "
 local rep = string.rep
 function _print(out, ...)
     if out == nil then
-        return write(stderr, "\n")
+        return stderr:write("\n")
     end
     stderr:write(out)
     stderr:write(rep(sep, 8 - #out % 8))
