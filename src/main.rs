@@ -4,6 +4,7 @@ use std::process::{Command, Stdio};
 use failure::ResultExt;
 use serde::Deserialize;
 use serde_json::to_string;
+use rlua_serde;
 
 #[derive(Deserialize, Debug)]
 struct Intercepted {
@@ -11,7 +12,7 @@ struct Intercepted {
     ioopen: Vec<PathBuf>
 }
 static INTERCEPT_SCRIPT: &'static str = include_str!("lua/intercept.lua");
-
+// static BUNDLE_TEMPLATE: &'static str = include_str!("lua/scoped_template.lua");
 #[derive(StructOpt)]
 /// Bundle your lua projects into a single script
 struct Opts {
@@ -25,11 +26,13 @@ struct Opts {
     #[structopt(short, long, default_value = "lua")]
     /// Path to the lua executable to use.
     interpreter: PathBuf,
+    #[structopt(default_value = "init.lua")]
     /// The main file of your lua project.
     target: PathBuf,
     /// The arguments to pass to the lua script.
     arg: Vec<String>
 }
+
 #[paw::main]
 fn main(opts: Opts) -> Result<(), exitfailure::ExitFailure> {
   let Intercepted { loadfile, ioopen } =
@@ -49,6 +52,21 @@ fn main(opts: Opts) -> Result<(), exitfailure::ExitFailure> {
   if opts.preload {
     println!("Also preloading {:?}", loadfile);
   }
+  // let loadfile = ["init.lua", "ext.lua"];
+  // let files = ["init.lua", "ext.lua", "file.txt"];
+
+  std::fs::write(outpath, format!(include_str!("lua/scoped_template.lua"),
+    scripts = if opts.preload {
+      format!("{{{}}}", loadfile.iter().map(|file| -> Result<_, exitfailure::ExitFailure> {
+        Ok(format!("[{}]=function(_ENV,loadfile,io)return function(...){} end end", to_string(&std::fs::canonicalize(file)?)?, std::fs::read_to_string(file)?))
+      }).collect::<Result<Vec<_>, _>>()?.join(","))
+    } else { String::from("false") },
+    files = format!("{{{}}}", files.iter().map(|file| -> Result<_, exitfailure::ExitFailure> {
+      Ok(format!("[{}]={{{}}}", to_string(&std::fs::canonicalize(file)?)?, to_string(&std::fs::read_to_string(file)?)?))
+    }).collect::<Result<Vec<_>, _>>()?.join(",")),
+    cwd = to_string(&std::env::current_dir()?)?,
+    entrypoint = to_string(&opts.target)?,
+    normalizeplatform = ""))?;
   
   Ok(())
 }
