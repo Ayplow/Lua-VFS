@@ -4,7 +4,6 @@ use std::process::{Command, Stdio};
 use failure::ResultExt;
 use serde::Deserialize;
 use serde_json::to_string;
-use rlua_serde;
 
 #[derive(Deserialize, Debug)]
 struct Intercepted {
@@ -45,17 +44,9 @@ fn main(opts: Opts) -> Result<(), exitfailure::ExitFailure> {
       .output()?.stdout
     ).context("interception failed")?;
 
-  let outpath = opts.output.unwrap_or(opts.target.with_extension("bundle.lua"));
   let files = [&loadfile[..], &ioopen[..]].concat();
 
-  println!("Creating bundle of {:?} at {:?}", files, outpath);
-  if opts.preload {
-    println!("Also preloading {:?}", loadfile);
-  }
-  // let loadfile = ["init.lua", "ext.lua"];
-  // let files = ["init.lua", "ext.lua", "file.txt"];
-
-  std::fs::write(outpath, format!(include_str!("lua/scoped_template.lua"),
+  let bundle = format!(include_str!("lua/scoped_template.lua"),
     scripts = if opts.preload {
       format!("{{{}}}", loadfile.iter().map(|file| -> Result<_, exitfailure::ExitFailure> {
         Ok(format!("[{}]=function(_ENV,loadfile,io)return function(...){} end end", to_string(&std::fs::canonicalize(file)?)?, std::fs::read_to_string(file)?))
@@ -66,7 +57,17 @@ fn main(opts: Opts) -> Result<(), exitfailure::ExitFailure> {
     }).collect::<Result<Vec<_>, _>>()?.join(",")),
     cwd = to_string(&std::env::current_dir()?)?,
     entrypoint = to_string(&opts.target)?,
-    normalizeplatform = ""))?;
+    normalizeplatform = "");
+
+  if let Some(outpath) = opts.output {
+    println!("Creating bundle of {:?} at {:?}", files, outpath);
+    if opts.preload {
+      println!("Also preloading {:?}", loadfile);
+    }
+    std::fs::write(outpath, bundle)?;
+  } else {
+    println!("{}", bundle)
+  }
   
   Ok(())
 }
