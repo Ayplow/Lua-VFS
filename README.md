@@ -98,3 +98,11 @@ arg, io.open, loadfile, os.getenv all need to be replaced in the context of the 
 Unfortunately, none of these really work perfectly, so our best option is going to be to implement them all, and let users choose which of the 4 different modes work best for them. Local vars would be default.
 
 Option #2 would have to be chosen during compilation, but the others should be able to be changed at runtime, to allow configuration in the source.
+
+### Atom TTS Package replacment
+
+This program can be used with https://github.com/Ayplow/ttscli to replicate the workflow in atom.
+
+```sh
+find -name "*.lua" | entr -s "lua-vfs --preload | ttscli set-script"
+```
