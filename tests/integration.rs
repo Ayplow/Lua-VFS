@@ -1,7 +1,7 @@
 use assert_cmd::prelude::*;
 use failure::ResultExt;
 use std::io::Write;
-use std::io::Read;
+// use std::io::Read;
 use std::path::Path;
 use std::process::Command;
 use tempfile::NamedTempFile;
@@ -16,32 +16,32 @@ fn test_bundle(path: &Path) -> Result<(), exitfailure::ExitFailure> {
             .stdout,
     )?;
     // TODO: Improve usability for alternative locations
-    let interpreter = std::env::var("LUA").unwrap_or("lua".into());
-    which::which(&interpreter).context(format!("lua interpreter {} not present in PATH", interpreter))?;
-    // Re-open it.
-    let mut file2 = bundle.reopen()?;
-    // Read the test data using the second handle.
-    let mut buf = String::new();
-    file2.read_to_string(&mut buf)?;
-    println!("{:?}", &Command::cargo_bin(env!("CARGO_PKG_NAME"))?
-            .current_dir(path)
-            .arg("--preload")
-            .output());
-    println!("Contents of bundle: {}", buf);
-    println!("{:?}", Command::new(&interpreter)
-            .arg("-e")
-            .arg("loadfile = nil load = nil io = nil")
-            .arg(bundle.path())
-            .output()?);
+    // let interpreter = std::env::var("LUA").unwrap_or("lua".into());
+    which::which("lua").context("lua interpreter not present in PATH")?;
+    // // Re-open it.
+    // let mut file2 = bundle.reopen()?;
+    // // Read the test data using the second handle.
+    // let mut buf = String::new();
+    // file2.read_to_string(&mut buf)?;
+    // println!("{:?}", &Command::cargo_bin(env!("CARGO_PKG_NAME"))?
+    //         .current_dir(path)
+    //         .arg("--preload")
+    //         .output());
+    // println!("Contents of bundle: {}", buf);
+    // println!("{:?}", Command::new(&interpreter)
+    //         .arg("-e")
+    //         .arg("loadfile = nil load = nil io = nil")
+    //         .arg(bundle.path())
+    //         .output()?);
     
     Ok(assert_eq!(
-        Command::new(&interpreter)
+        Command::new("lua")
             .arg("-e")
             .arg("loadfile = nil load = nil io = nil")
             .arg(bundle.path())
             .output()?
             .stdout,
-        Command::new(&interpreter)
+        Command::new("lua")
             .current_dir(path)
             .arg("init.lua")
             .output()?

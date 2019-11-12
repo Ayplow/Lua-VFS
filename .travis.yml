@@ -18,8 +18,8 @@ addons:
        lua5.3
 before_install:
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew update; brew install lua; fi
-  - if [ "$TRAVIS_OS_NAME" = "windows" ]; then choco install lua53; export LUA=lua53; echo Using $LUA as interpreter; fi
-  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then export LUA=lua5.3; fi
+  - if [ "$TRAVIS_OS_NAME" = "windows" ]; then choco install lua53; mkdir bin; cd bin; ln $(which lua53) lua; export PATH=$(pwd):$PATH; fi
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then mkdir bin; cd bin; ln $(which lua5.3) lua; export PATH=$(pwd):$PATH; fi
 deploy:
   provider: releases
   api_key:
