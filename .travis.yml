@@ -28,6 +28,7 @@ jobs:
       cd bin;
       export PATH=$(pwd):$PATH;
       cp /c/ProgramData/chocolatey/lib/lua53/tools/lua53 /c/ProgramData/chocolatey/lib/lua53/tools/lua;
+      ls /c/ProgramData/chocolatey/lib/lua53/tools/;
   fast_finish: true
 cache: cargo
 
