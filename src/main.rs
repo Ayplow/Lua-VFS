@@ -96,6 +96,7 @@ fn main(opts: Opts) -> Result<(), exitfailure::ExitFailure> {
                     Ok(format!(
                         "[{}]={{{}}}",
                         to_string(&path_for_vfs(file)?)?,
+                        to_string(&std::fs::read_to_string(file)?.replace("\r\n", "\n"))?
                     ))
                 })
                 .collect::<Result<Vec<_>, _>>()?
