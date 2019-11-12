@@ -10,17 +10,17 @@ jobs:
       apt:
         packages: lua5.3
     before_install: >
-      ln -s $(which lua5.3) /bin/lua
-      which lua
+      ln -s $(which lua5.3) /bin/lua;
+      which lua;
   - os: osx
     before_install: >
-      brew update
-      brew install lua
+      brew update;
+      brew install lua;
   - os: windows
     before_install: >
-      choco install lua53
-      ls /c/ProgramData/chocolatey/lib/lua53/tools/
-      ln -s /c/ProgramData/chocolatey/lib/lua53/tools/lua53 /bin/lua
+      choco install lua53;
+      ls /c/ProgramData/chocolatey/lib/lua53/tools/;
+      ln -s /c/ProgramData/chocolatey/lib/lua53/tools/lua53 /bin/lua;
   allow_failures:
     - rust: nightly
   fast_finish: true
