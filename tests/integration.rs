@@ -15,16 +15,16 @@ fn test_bundle(path: &Path) -> Result<(), exitfailure::ExitFailure> {
             .stdout,
     )?;
     // TODO: Improve usability for alternative locations
-    which::which(std::env::var("LUA").unwrap_or("lua".into()))
-        .context("lua interpreter not present in PATH")?;
+    let interpreter = std::env::var("LUA").unwrap_or("lua".into());
+    which::which(&interpreter).context("lua interpreter not present in PATH")?;
     Ok(assert_eq!(
-        Command::new("lua")
+        Command::new(&interpreter)
             .arg("-e")
             .arg("loadfile = nil load = nil io = nil")
             .arg(bundle.path())
             .output()?
             .stdout,
-        Command::new("lua")
+        Command::new(&interpreter)
             .current_dir(path)
             .arg("init.lua")
             .output()?
