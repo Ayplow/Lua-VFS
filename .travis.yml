@@ -1,16 +1,21 @@
 language: rust
-rust:
-- stable
-- beta
-- nightly
 jobs:
   include:
   - os: linux
+    rust:
+      - stable
+      - beta
+      - nightly
+    allow_failures:
+      - rust: nightly
     addons:
       apt:
         packages: lua5.3
     before_install: >
-      ln -s $(which lua5.3) /bin/lua;
+      mkdir bin;
+      cd bin;
+      export PATH=$(pwd):$PATH;
+      ln -s $(which lua5.3) lua;
       which lua;
   - os: osx
     before_install: >
@@ -19,10 +24,11 @@ jobs:
   - os: windows
     before_install: >
       choco install lua53;
-      ls /c/ProgramData/chocolatey/lib/lua53/tools/;
-      ln -s /c/ProgramData/chocolatey/lib/lua53/tools/lua53 /bin/lua;
-  allow_failures:
-    - rust: nightly
+      mkdir bin;
+      cd bin;
+      export PATH=$(pwd):$PATH;
+      ln -s /c/ProgramData/chocolatey/lib/lua53/tools/lua53 lua;
+      which lua;
   fast_finish: true
 cache: cargo
 
