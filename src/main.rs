@@ -32,6 +32,15 @@ struct Opts {
     arg: Vec<String>,
 }
 
+fn path_for_vfs(path: &std::path::Path) -> Result<String, exitfailure::ExitFailure> {
+    let ffs = std::fs::canonicalize(path)?;
+    let mut s = ffs.to_str().expect("Duhh");
+    if cfg!(windows) {
+        return Ok(["c".into(),&s.replace("\\", "/")[6..]].join(""))
+    }
+    Ok(s.into())
+}
+
 #[paw::main]
 fn main(opts: Opts) -> Result<(), exitfailure::ExitFailure> {
     let Intercepted { loadfile, ioopen } =
@@ -69,7 +78,7 @@ fn main(opts: Opts) -> Result<(), exitfailure::ExitFailure> {
                     .map(|file| -> Result<_, exitfailure::ExitFailure> {
                         Ok(format!(
                             "[{}]=function(_ENV,loadfile,io)return function(...){} end end",
-                            to_string(&std::fs::canonicalize(file)?)?,
+                            to_string(&path_for_vfs(file)?)?,
                             std::fs::read_to_string(file)?
                         ))
                     })
@@ -86,14 +95,13 @@ fn main(opts: Opts) -> Result<(), exitfailure::ExitFailure> {
                 .map(|file| -> Result<_, exitfailure::ExitFailure> {
                     Ok(format!(
                         "[{}]={{{}}}",
-                        to_string(&std::fs::canonicalize(file)?)?,
-                        to_string(&std::fs::read_to_string(file)?)?
+                        to_string(&path_for_vfs(file)?)?,
                     ))
                 })
                 .collect::<Result<Vec<_>, _>>()?
                 .join(",")
         ),
-        cwd = to_string(&std::env::current_dir()?)?,
+        cwd = to_string(&path_for_vfs(&std::env::current_dir()?)?)?,
         entrypoint = to_string(&opts.target)?,
         normalizeplatform = ""
     );
