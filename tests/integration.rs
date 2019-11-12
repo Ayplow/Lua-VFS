@@ -1,6 +1,7 @@
 use assert_cmd::prelude::*;
 use failure::ResultExt;
 use std::io::Write;
+use std::io::Read;
 use std::path::Path;
 use std::process::Command;
 use tempfile::NamedTempFile;
@@ -16,7 +17,14 @@ fn test_bundle(path: &Path) -> Result<(), exitfailure::ExitFailure> {
     )?;
     // TODO: Improve usability for alternative locations
     let interpreter = std::env::var("LUA").unwrap_or("lua".into());
-    which::which(&interpreter).context("lua interpreter not present in PATH")?;
+    which::which(&interpreter).context(format!("lua interpreter {} not present in PATH", interpreter))?;
+    // Re-open it.
+    let mut file2 = bundle.reopen()?;
+    // Read the test data using the second handle.
+    let mut buf = String::new();
+    file2.read_to_string(&mut buf)?;
+    println!("{}", buf);
+    assert!(false);
     println!("{:?}", Command::new(&interpreter)
             .arg("-e")
             .arg("loadfile = nil load = nil io = nil")
