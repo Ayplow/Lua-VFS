@@ -32,13 +32,29 @@ struct Opts {
     arg: Vec<String>,
 }
 
-fn path_for_vfs(path: &std::path::Path) -> Result<String, exitfailure::ExitFailure> {
-    let ffs = std::fs::canonicalize(path)?;
-    let mut s = ffs.to_str().expect("Duhh");
-    if cfg!(windows) {
-        return Ok(["c".into(),&s.replace("\\", "/")[6..]].join(""))
+fn path_for_vfs(path: &std::path::Path) -> Option<String> {
+    use std::path::Component;
+    if let Ok(canonical) = std::fs::canonicalize(path) {
+        let components = canonical.components().map(|c| match c {
+            Component::RootDir => Some(""),
+            Component::CurDir => Some("."),
+            Component::ParentDir => Some(".."),
+            // TODO: Implement prefix translation
+            Component::Prefix(_) => Some(""),
+            Component::Normal(ref s) => s.to_str()
+        })
+            .collect::<Option<Vec<_>>>();
+
+        return components.map(|v| {
+            if v.len() == 1 && v[0].is_empty() {
+                // Special case for '/'
+                "/".to_string()
+            } else {
+                v.join("/")
+            }
+        })
     }
-    Ok(s.into())
+    None
 }
 
 #[paw::main]
@@ -78,7 +94,7 @@ fn main(opts: Opts) -> Result<(), exitfailure::ExitFailure> {
                     .map(|file| -> Result<_, exitfailure::ExitFailure> {
                         Ok(format!(
                             "[{}]=function(_ENV,loadfile,io)return function(...){} end end",
-                            to_string(&path_for_vfs(file)?)?,
+                            to_string(&path_for_vfs(file).unwrap())?,
                             std::fs::read_to_string(file)?
                         ))
                     })
@@ -95,14 +111,14 @@ fn main(opts: Opts) -> Result<(), exitfailure::ExitFailure> {
                 .map(|file| -> Result<_, exitfailure::ExitFailure> {
                     Ok(format!(
                         "[{}]={{{}}}",
-                        to_string(&path_for_vfs(file)?)?,
+                        to_string(&path_for_vfs(file).unwrap())?,
                         to_string(&std::fs::read_to_string(file)?.replace("\r\n", "\n"))?
                     ))
                 })
                 .collect::<Result<Vec<_>, _>>()?
                 .join(",")
         ),
-        cwd = to_string(&path_for_vfs(&std::env::current_dir()?)?)?,
+        cwd = to_string(&path_for_vfs(&std::env::current_dir()?).unwrap())?,
         entrypoint = to_string(&opts.target)?,
         normalizeplatform = ""
     );
