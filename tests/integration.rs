@@ -1,9 +1,9 @@
 use assert_cmd::prelude::*;
+use failure::ResultExt;
 use std::io::Write;
 use std::path::Path;
 use std::process::Command;
 use tempfile::NamedTempFile;
-use failure::ResultExt;
 
 fn test_bundle(path: &Path) -> Result<(), exitfailure::ExitFailure> {
     let mut bundle = NamedTempFile::new()?;
@@ -15,7 +15,8 @@ fn test_bundle(path: &Path) -> Result<(), exitfailure::ExitFailure> {
             .stdout,
     )?;
     // TODO: Improve usability for alternative locations
-    which::which("lua").context("lua interpreter not present in PATH")?;
+    which::which(std::env::var("LUA").unwrap_or("lua".into()))
+        .context("lua interpreter not present in PATH")?;
     Ok(assert_eq!(
         Command::new("lua")
             .arg("-e")
