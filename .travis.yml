@@ -27,7 +27,7 @@ jobs:
       mkdir bin;
       cd bin;
       export PATH=$(pwd):$PATH;
-      ln -s /c/ProgramData/chocolatey/lib/lua53/tools/lua53 lua;
+      cp /c/ProgramData/chocolatey/lib/lua53/tools/lua53 /c/ProgramData/chocolatey/lib/lua53/tools/lua;
       which lua;
   fast_finish: true
 cache: cargo
