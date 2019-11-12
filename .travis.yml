@@ -2,43 +2,41 @@ language: rust
 jobs:
   include:
   - os: linux
-    rust:
-      - stable
-      - beta
-      - nightly
-    allow_failures:
-      - rust: nightly
+    env: TARGET=x86_64-unknown-linux-gnu
     addons:
       apt:
         packages: lua5.3
     before_install: >
       mkdir bin;
-      cd bin;
-      export PATH=$(pwd):$PATH;
-      ln -s $(which lua5.3) lua;
-      which lua;
+      export PATH=$(pwd)/bin:$PATH;
+      ln -s $(which lua5.3) bin/lua;
   - os: osx
+    env: TARGET=x86_64-apple-darwin
     before_install: >
       brew update;
       brew install lua;
   - os: windows
+    env: TARGET=x86_64-pc-windows-msvc
     before_install: >
       choco install lua53;
       mkdir bin;
-      cd bin;
-      export PATH=/c/ProgramData/chocolatey/lib/lua53/tools/:$PATH;
-      cp /c/ProgramData/chocolatey/lib/lua53/tools/lua53 /c/ProgramData/chocolatey/lib/lua53/tools/lua;
-      ls /c/ProgramData/chocolatey/lib/lua53/tools/;
+      export PATH=$(pwd)/bin:$PATH;
+      cp /c/ProgramData/chocolatey/lib/lua53/tools/lua53 bin/lua;
   fast_finish: true
 cache: cargo
 
+script:
+  - cargo test --verbose
+  - cargo build --target $TARGET --release
+
+before_deploy:
+  - tar -czf lua-vfs-$TRAVIS_TAG-$TARGET.tar.gz target/$TARGET/release
 deploy:
   provider: releases
   api_key:
-    secure: oycC03K4KHCubDz8MfFXq4c9s1abJIpp/uPI9CwWRf4nf6RZ54+f/BYhcZhI66N7hsm5vtHJbuKSGyWRRBAWiKtdpqeEJVDuFL4KMi5MLecgb7NkKNLpmfeuqT3b+601YGl2C00phj5cMCcWeMlrzlqldO1MRjEIPOq7CLxoH8bCgIcycybY3MDQsfId+ObaVN3oOu8cb4R7IrVaX+IJASWfFv1RKDXT/9lXuJ0KQV0aEdXS773QpeFPj7JrnVbu6GPftQ9ct0dU3lnA+gPEk6wi047/e8gUxJiToo8fDXNp2YT/okus1gh07kp5kJmt5ArJphP3B+appFpBh97bA0fiXlVp+0YpauOKOJFSFO+HcAYwvkIxr7TpqradAmi6RkH14WnJLW6JiMqhRl96FDPkFqyAsi953sXNKpZjfDx0Far+ImDYDqW09kKxGOSpdEF/d/Dq+ps88gVZS73xz7LKWwq8KVVQiaIjV9wPnxx0WOXOwK/C9RrMc40QodKQWAz0Tn4wePLwi8CUPlLguNTu4wRRt2NQhAKjARCj4TdupANp2WpHBf9l8lCSBhIAMpbcPh8ob4cs2rNAlIn5eG0o7xycRQiIDi3/6QLY4oVfVE2Y5jBBXc4UJt7Xrqno5cmgYaolK9w2DyerkcVGWP9wIHpng+E5f92JjWTif74=
-  file_glob: true
-  file: lua-vfs-$TRAVIS_TAG-$TARGET.*
+    secure: NAmjiTur0R70FEuvJjlXyVGWgdCVoypPENIblfsDdawxjyV3AMQok0Kq8KnOPTe2dhPYLnPSMdT//XxA01c8ieZ/RfyH4LCD52zPs4NWL9/XFEnUoGlv3yJUEhPeugUXtSF+Y5mdi7WdrY5AJiWhXS2za2OlqOU0dPzNU3uNxjxI8Cv/NGCxR5syYlBGBXkpTD1i/Z814hi/LmD+zbprzZriRAuYeaBtObHb0zwHfgAQt66Dock3gc3BAF52f1g4dElyPqiZ7qef9Wos134lfKlMeUGxM42baf9cEdqK6FvUfVEKE0lviuTNdrSJG53hgDBQg8pB8Dcf4ln6vgoywhBT4+zhv80S3CIKGoKDQI68RzbV2czuMtWcJa5bW0L8Xn7MdFX0Ry5qKrIqYjM8+PhH3Bo9Uf8DEVoY+G2NQXQUCGX/A0CElEOBMC/OANuwWvxwEKx3KvnBb21Ho6yUiUoE6mvugttGO0GyDljknIwq39j6UBOKnGK3Kyr4G2V0xDZEShTkwz3IlZMxES6j0FGbTgG+/qGpFMoFFwNhBDncwIceabnuZbuxK3EJGJjRbi8x7ROhkgX50ptDhq1uadEHBpCv36Dx7fFRjw1RZfnL8L2LZwlyH3b8F1VC9g1gULkPPtZpxUvLlW8kpLHA0jzML3coKey/MDwXWcY/f4o=
+  file: lua-vfs-$TRAVIS_TAG-$TARGET.tar.gz
   on:
-    condition: $TRAVIS_RUST_VERSION = stable
+    repo: Ayplow/Lua-VFS
     tags: true
   skip_cleanup: true
