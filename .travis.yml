@@ -26,7 +26,7 @@ jobs:
       choco install lua53;
       mkdir bin;
       cd bin;
-      export PATH=$(pwd):$PATH;
+      export PATH=/c/ProgramData/chocolatey/lib/lua53/tools/:$PATH;
       cp /c/ProgramData/chocolatey/lib/lua53/tools/lua53 /c/ProgramData/chocolatey/lib/lua53/tools/lua;
       ls /c/ProgramData/chocolatey/lib/lua53/tools/;
   fast_finish: true
