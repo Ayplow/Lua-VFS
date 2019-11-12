@@ -23,12 +23,17 @@ fn test_bundle(path: &Path) -> Result<(), exitfailure::ExitFailure> {
     // Read the test data using the second handle.
     let mut buf = String::new();
     file2.read_to_string(&mut buf)?;
+    println!("{:?}", &Command::cargo_bin(env!("CARGO_PKG_NAME"))?
+            .current_dir(path)
+            .arg("--preload")
+            .output());
     println!("Contents of bundle: {}", buf);
     println!("{:?}", Command::new(&interpreter)
             .arg("-e")
             .arg("loadfile = nil load = nil io = nil")
             .arg(bundle.path())
             .output()?);
+    
     Ok(assert_eq!(
         Command::new(&interpreter)
             .arg("-e")
