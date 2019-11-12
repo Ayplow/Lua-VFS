@@ -36,7 +36,7 @@ fn path_for_vfs(path: &std::path::Path) -> Option<String> {
     use std::path::Component;
     if let Ok(canonical) = std::fs::canonicalize(path) {
         let components = canonical.components().map(|c| match c {
-            Component::RootDir => Some(""),
+            Component::RootDir => Some("root"),
             Component::CurDir => Some("."),
             Component::ParentDir => Some(".."),
             // TODO: Implement prefix translation
