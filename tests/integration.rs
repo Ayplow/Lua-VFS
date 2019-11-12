@@ -21,8 +21,7 @@ fn test_bundle(path: &Path) -> Result<(), exitfailure::ExitFailure> {
             .arg("-e")
             .arg("loadfile = nil load = nil io = nil")
             .arg(bundle.path())
-            .output()?
-            .stdout);
+            .output()?);
     Ok(assert_eq!(
         Command::new(&interpreter)
             .arg("-e")
