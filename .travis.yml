@@ -4,23 +4,28 @@ rust:
 - beta
 - nightly
 jobs:
+  include:
+  - os: linux
+    addons:
+      apt:
+        packages: lua5.3
+    before_install: >
+      ln -s $(which lua5.3) /bin/lua
+      which lua
+  - os: osx
+    before_install: >
+      brew update
+      brew install lua
+  - os: windows
+    before_install: >
+      choco install lua53
+      ls /c/ProgramData/chocolatey/lib/lua53/tools/
+      ln -s /c/ProgramData/chocolatey/lib/lua53/tools/lua53 /bin/lua
   allow_failures:
-  - rust: nightly
+    - rust: nightly
   fast_finish: true
 cache: cargo
-os:
-- linux
-- osx
-- windows
-addons:
-  apt:
-    packages:
-       lua5.3
-before_install:
-  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew update; brew install lua; fi
-  - if [ "$TRAVIS_OS_NAME" = "windows" ]; then choco install lua53; mkdir bin; cd bin; ln -s /c/ProgramData/chocolatey/lib/lua53/tools/lua53 lua; export PATH=$(pwd):$PATH; ls; pwd; echo oml I'm so tired of this; fi
-  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then mkdir bin; cd bin; ln -s $(which lua5.3) lua; export PATH=$(pwd):$PATH; fi
-  - lua -e "print 'working'"
+
 deploy:
   provider: releases
   api_key:
